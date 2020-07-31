@@ -74,14 +74,17 @@ class MY_KEITHLEY213():
                 return '%s has range %s, output voltage is %.6f .' %(self.selected_port, range_m, voltage)
             else:
                  return 'P%d has range %s, output voltage is %.6f .' %(port, range_m, voltage)
-    def GOTO(self, final_value, step, delay_time, port, reset_range=False, auto_range = False, range_m=1):
+    def GOTO(self, final_value, step, delay_time, reset_range=False, auto_range = False, range_m=1, reset_port = False, port=None):
+        if reset_port:
+            self.selected_port = "P%d"%port
+            self.machine.write("%sX"%self.selected_port)
         if reset_range:
             if auto_range:
                 self.range_m = 'A1'
             else:
                 self.range_m = "A0R%d"%range_m
             self.machine.write("%sX"%self.range_m)
- #       self.machine.write("P%d X"%port)
+        port = eval(re.findall(r'[1-9]', self.selected_port)[0])
         now_value = self.GET_OUTPUT(port)
         if final_value>now_value:
             while final_value>now_value:
@@ -98,5 +101,7 @@ class MY_KEITHLEY213():
     def ZERO(self, step, delay_time, port=None):
         if port is None:
             port = eval(re.findall(r'[1-9]', self.selected_port)[0])
-        self.GOTO(0.0, step, delay_time, port)
+            self.GOTO(0.0, step, delay_time, reset_port=True, port=selected_port)
+        else:
+            self.GOTO(0.0, step, delay_time, reset_port=True, port=port)
 
